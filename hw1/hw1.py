@@ -49,13 +49,7 @@ def compute_cost(X, y, theta):
     ###########################################################################
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
-    i = 0
-    for row in X:
-        dot = np.dot(row, theta)
-        diff_squared = (dot - y[i])**2
-        J += diff_squared
-        i += 1
-    J = float(J / ( 2 * len(y) ))
+    J = sum(np.array([value**2 for value in np.subtract(np.dot(X, theta), y).A1])) / (2*len(y))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
