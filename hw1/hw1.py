@@ -21,11 +21,11 @@ def preprocess(X, y):
     # TODO: Implement the normalization function.                             #
     ###########################################################################
     
-    std = X.std()
-    mean = X.mean()
+    x_mean = X.mean()
+    y_mean = y.mean()
     
-    X = np.array([(value - mean)/std for value in X])
-    y = np.array([value/len(y) for value in y])
+    X = np.array([(value - x_mean)/(X.max() - X.min()) for value in X])
+    y = np.array([(value - y_mean)/(y.max() - y.min()) for value in y])
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -49,7 +49,13 @@ def compute_cost(X, y, theta):
     ###########################################################################
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
-    pass
+    i = 0
+    for row in X:
+        dot = np.dot(row, theta)
+        diff_squared = (dot - y[i])**2
+        J += diff_squared
+        i += 1
+    J = float(J / ( 2 * len(y) ))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -79,7 +85,9 @@ def gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
-    pass
+    for i in range(num_iters):
+        J_history.push(theta)
+        theta = compute_cost(X, y, theta)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
