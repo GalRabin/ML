@@ -21,11 +21,9 @@ def preprocess(X, y):
     # TODO: Implement the normalization function.                             #
     ###########################################################################
     
-    x_mean = X.mean()
-    y_mean = y.mean()
     
-    X = np.array([(value - x_mean)/(X.max() - X.min()) for value in X])
-    y = np.array([(value - y_mean)/(y.max() - y.min()) for value in y])
+    X = (X - np.mean(X, axis=0)) / (np.max(X, axis=0) - np.min(X, axis=0))
+    y = (y - np.mean(y)) / (np.max(y) - np.min(y))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -49,7 +47,9 @@ def compute_cost(X, y, theta):
     ###########################################################################
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
-    J = sum(np.array([value**2 for value in np.subtract(np.dot(X, theta), y).A1])) / (2*len(y))
+    hypothesis = np.dot(X, theta)
+    diff = hypothesis - y
+    J = np.sum(diff ** 2) / (2 * len(y))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -73,15 +73,26 @@ def gradient_descent(X, y, theta, alpha, num_iters):
     Returns two values:
     - theta: The learned parameters of your model.
     - J_history: the loss value for every iteration.
-    """
+    """                                                  
     
     J_history = [] # Use a python list to save cost in every iteration
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
     for i in range(num_iters):
-        J_history.push(theta)
-        theta = compute_cost(X, y, theta)
+        hypothesis = np.dot(X, theta)
+        diff = hypothesis - y
+        gradients = np.dot(X.T, diff) / len(y)
+        theta = theta - (gradients * alpha)
+        
+        j = np.sum(diff ** 2) / (2 * len(y))
+        J_history.append(j)
+        
+        
+        
+        
+                                                                                   
+                                                                       
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -101,8 +112,8 @@ def pinv(X, y):
 
     ########## DO NOT USE numpy.pinv ##############
     """
-    
-    pinv_theta = None
+    pinv = np.dot(np.linalg.inv(np.dot(X.T, X)), X.T)
+    pinv_theta = np.dot(pinv, y)
     ###########################################################################
     # TODO: Implement the pseudoinverse algorithm.                            #
     ###########################################################################
@@ -134,7 +145,18 @@ def efficient_gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
-    pass
+    i = 0
+    # just a placeholder for the while loop condition
+    diff = np.ones(len(y))
+    while i in range(num_iters) and diff.max() > 1e-8:
+        hypothesis = np.dot(X, theta)
+        diff = hypothesis - y
+        gradients = np.dot(X.T, diff) / len(y)
+        theta = theta - (gradients * alpha)
+
+        j = np.sum(diff ** 2) / (2 * len(y))
+        J_history.append(j)
+        i += 1
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -158,7 +180,9 @@ def find_best_alpha(X, y, iterations):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    theta = np.random.random(size=2)
+    alpha_dict = {alpha: efficient_gradient_descent(X, y, theta,alpha, iterations)[1][-1] for alpha in alphas}
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
