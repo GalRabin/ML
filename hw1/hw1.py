@@ -148,15 +148,18 @@ def efficient_gradient_descent(X, y, theta, alpha, num_iters):
     i = 0
     # just a placeholder for the while loop condition
     diff = np.ones(len(y))
-    while i in range(num_iters) and diff.max() > 1e-8:
+    prev_j = 0
+    for i in range(num_iters):
+        j = compute_cost(X, y, theta)
+        J_history.append(j)
+        if abs(j - prev_j) < 1e-8:
+            break
         hypothesis = np.dot(X, theta)
         diff = hypothesis - y
         gradients = np.dot(X.T, diff) / len(y)
         theta = theta - (gradients * alpha)
-
-        j = np.sum(diff ** 2) / (2 * len(y))
-        J_history.append(j)
-        i += 1
+        prev_j = j
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -205,7 +208,7 @@ def generate_triplets(X):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    triplets = list(itertools.combinations(X, 3))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -229,10 +232,24 @@ def find_best_triplet(df, triplets, alpha, num_iter):
     - The best triplet as a python list holding the best triplet as strings.
     """
     best_triplet = None
+    min_J = 2 ** 31
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    for triplet in triplets:
+        X = np.array(df[list(triplet)])
+        y = df.get('price')
+        X, y = preprocess(X, y)
+        ones = np.ones(np.size(X,0)).reshape(-1,1)
+        X = np.hstack((ones, X))
+        np.random.seed(42)
+        shape = X.shape[1]
+        rand_theta = np.random.random(shape)
+        theta, current_j = efficient_gradient_descent(X, y, rand_theta, alpha, num_iter)
+        if (current_j[-1] < min_J):
+            min_J = current_j[-1]
+            best_triplet = triplet
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
