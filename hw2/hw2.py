@@ -77,7 +77,8 @@ class DecisionNode:
 def avg_of_pairs(lis):
     if len(lis) < 2:
         return lis
-    return np.array([(x+y)/2.0 for x,y in zip(sorted(lis), sorted(lis[1:]))])
+    lis = sorted(lis)
+    return np.array([(x+y)/2.0 for x,y in zip(lis, lis[1:])])
 
 def find_best_attribute(data, impurity):
     c = data.shape[1] - 1
