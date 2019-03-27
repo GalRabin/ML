@@ -107,30 +107,28 @@ def find_best_attribute(data, impurity):
 def get_chi(node):
     data, i, threshold = node.data, node.feature, node.value
     chi = 0
-    classes = np.unique(data[:,-1])
-    for c in classes:
-        Pc = data[data[:,-1]==c].shape[0] / data.shape[0]
-        PcHat = 1 - Pc
-        under_thresold = data[data[:,i]<=threshold]
-        over_thresold = data[data[:,i]>threshold]
-        D0 = under_thresold.shape[0]
-        D1 = over_thresold.shape[0]
+    
+    Pc = data[data[:,-1]==0].shape[0] / data.shape[0]
+    PcHat = 1 - Pc
+    under_thresold = data[data[:,i]<=threshold]
+    over_thresold = data[data[:,i]>threshold]
+    D0 = under_thresold.shape[0]
+    D1 = over_thresold.shape[0]
         
-        p0 = under_thresold[under_thresold[:,-1]==c].shape[0]
-        n0 = under_thresold[under_thresold[:,-1]!=c].shape[0]
+    p0 = under_thresold[under_thresold[:,-1]==0].shape[0]
+    n0 = under_thresold[under_thresold[:,-1]!=0].shape[0]
         
-        p1 = over_thresold[over_thresold[:,-1]==c].shape[0]
-        n1 = over_thresold[over_thresold[:,-1]!=c].shape[0]
-        E00 = D0 * Pc
-        E01 = D0 * PcHat
+    p1 = over_thresold[over_thresold[:,-1]==0].shape[0]
+    n1 = over_thresold[over_thresold[:,-1]!=0].shape[0]
+    E00 = D0 * Pc
+    E01 = D0 * PcHat
         
-        E10 = D1 * Pc
-        E11 = D1 * PcHat
+    E10 = D1 * Pc
+    E11 = D1 * PcHat
         
-        under = (((p0 - E00)**2) / E00) + (((n0 - E01)**2) / E01)
-        over = (((p1 - E10)**2) / E10) + (((n1 - E11)**2) / E11)
-        chi += under + over
-    return chi
+    under = (((p0 - E00)**2) / E00) + (((n0 - E01)**2) / E01)
+    over = (((p1 - E10)**2) / E10) + (((n1 - E11)**2) / E11)
+    return under + over
 
 def build_tree(data, impurity, chi_value=1):
     """
