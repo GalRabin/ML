@@ -60,7 +60,7 @@ class DecisionNode:
     
     def __init__(self, feature=None, value=None, data=None, parent=None):
         self.children = []
-        self.parent=parent
+        self.parent= parent
         self.data = data
         self.feature = feature # column index of criteria being tested
         self.value = value # value necessary to get a true result
@@ -200,7 +200,10 @@ def predict(node, instance):
         if not node:
             return
         if not node.has_children():
-            return node.data[:,-1][0]
+            unique, counts = np.unique(node.data[:,-1], return_counts=True)
+            class_count_pairs = (list(zip(unique, counts)))
+            sorted_by_count = sorted(class_count_pairs, key=lambda x: x[1], reverse=True)[0][0]
+            return sorted_by_count
         feature = node.feature
         threshold = node.value
         if instance[feature] <= threshold:
@@ -238,7 +241,7 @@ def calc_accuracy(node, dataset):
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return accuracy
+    return accuracy * 100
 
 def print_tree(node):
     '''
