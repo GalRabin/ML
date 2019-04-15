@@ -17,8 +17,8 @@ class NaiveNormalClassDistribution():
         """
         self.class_value = class_value
         data = dataset[dataset[:,-1]==class_value]
-        self.mean = np.array([np.mean(data[:,c], dtype='float64') for c in range(data.shape[1] - 1)])
-        self.std = np.array([np.std(data[:,c], dtype='float64') for c in range(data.shape[1] - 1)])
+        self.mean = np.array([np.mean(data[:,c]) for c in range(data.shape[1] - 1)])
+        self.std = np.array([np.std(data[:,c]) for c in range(data.shape[1] - 1)])
         self.prior = data.shape[0] / dataset.shape[0]
     
     def get_prior(self):
@@ -33,7 +33,6 @@ class NaiveNormalClassDistribution():
         """
         p = 1.0
         for c in range(x.shape[0] - 1):
-#            p *= (1.0 / (np.sqrt(2 * np.pi * np.square(self.std[c])))) * np.exp(-0.5 * np.square((x[c] - self.mean[c])/self.std[c]))
             p *= normal_pdf(x[c], self.mean[c], self.std[c])
         return p
             
@@ -42,7 +41,7 @@ class NaiveNormalClassDistribution():
         Returns the posterior porbability of the instance under the class according to the dataset distribution.
         * Ignoring p(x)
         """
-        return self.get_instance_likelihood(x) * self.prior
+        return np.log(self.get_instance_likelihood(x) * self.prior)
     
 class MultiNormalClassDistribution():
     def __init__(self, dataset, class_value):
@@ -56,8 +55,8 @@ class MultiNormalClassDistribution():
         """
         self.class_value = class_value
         data = dataset[dataset[:,-1]==class_value]
-        self.mean = np.array([np.mean(data[:,c], dtype='float64') for c in range(data.shape[1] - 1)])
-        self.cov = np.cov([dataset[:, i] for i in range(dataset.shape[1] - 1)])
+        self.mean = np.array([np.mean(data[:,c]) for c in range(data.shape[1] - 1)])
+        self.cov = np.cov([data[:, i] for i in range(data.shape[1] - 1)])
         self.prior = data.shape[0] / dataset.shape[0]
         
     def get_prior(self):
@@ -77,7 +76,7 @@ class MultiNormalClassDistribution():
         Returns the posterior porbability of the instance under the class according to the dataset distribution.
         * Ignoring p(x)
         """
-        return self.get_instance_likelihood(x) * self.prior
+        return np.log(self.get_instance_likelihood(x) * self.prior)
     
     
 
@@ -92,7 +91,7 @@ def normal_pdf(x, mean, std):
  
     Returns the normal distribution pdf according to the given mean and var for the given x.    
     """
-    return (1.0 / (np.sqrt(2 * np.pi * np.square(std)))) * np.exp(-0.5 * np.square((x - mean)/std))
+    return np.exp(-0.5 * np.square((x - mean)/std)) / ((np.sqrt(2 * np.pi * np.square(std))))
 
     
 def multi_normal_pdf(x, mean, cov):
@@ -106,7 +105,7 @@ def multi_normal_pdf(x, mean, cov):
  
     Returns the normal distribution pdf according to the given mean and var for the given x.    
     """
-    return np.power(2 * np.pi, -0.5 * x.shape[0]) * np.power(np.linalg.det(cov), -0.5) * np.exp((-0.5 * np.dot((x-mean).T, (np.dot(np.linalg.inv(cov), (x-mean))))))
+    return np.exp( np.dot(np.dot(x-mean, np.linalg.inv(cov)),x-mean) / -2 ) / np.sqrt( (np.power(np.pi * 2, x.shape[0]) * np.square(np.linalg.det(cov))))
 
 
 ####################################################################################################
