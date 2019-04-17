@@ -127,7 +127,7 @@ class DiscreteNBClassDistribution():
         
         self.class_value = class_value
         self.data = dataset[dataset[:,-1]==class_value]
-        self.possible_values_per_attr = np.array([np.unique(dataset[:,i]).shape[0] for i in range(dataset.shape[1] - 1)])
+        self.possible_values_per_attr = np.array([np.unique(self.data[:,i]).shape[0] for i in range(self.data.shape[1] - 1)])
         self.prior = self.data.shape[0] / dataset.shape[0]
     
     def get_prior(self):
