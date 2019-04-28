@@ -127,19 +127,21 @@ def maximization(points_list, ranks):
     w_arrs = []
     mu_arrs = []
     sigma_arrs = []
-    for k in range(len(ranks[0])):
-        w_arrs.append(np.sum(ranks[:, k]) / N)
-    w_new = np.array(w_arrs)
-
-    for k in range(len(w_new)):
-        mu, sigma = norm.fit(np.array([ranks[i][k] * points_list[i] for i in range(len(ranks))]))
-        mu /= w_new[k]
-        sigma /= w_new[k]
+#     for k in range(len(ranks[0])):
+#         w_arrs.append(np.sum(ranks[:, k]) / N)
+#     w_new = np.array(w_arrs)
+    w_new = np.mean(ranks, axis=0)
+    points = np.array(points_list)
+    for k in range(w_new.shape[0]):
+        mu = np.dot(ranks[:, k], points) / (w_new[k] * N)
         mu_arrs.append(mu)
-        sigma_arrs.append(sigma)
-    
     mu_new = np.array(mu_arrs)
-    sigma_new = np.array(sigma_arrs)
+ 
+    for k in range(w_new.shape[0]):
+        sigma_squared = np.dot(ranks[:, k], np.square(np.array([point - mu_new[k] for point in points_list]))) / (w_new[k] * N)
+        sigma_arrs.append(sigma_squared)
+    
+    sigma_new = np.sqrt(np.array(sigma_arrs))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -159,7 +161,7 @@ def calc_max_delta(old_param, new_param):
     ###########################################################################
     # TODO: find the maximal delta between each old and new parameter         #
     ###########################################################################
-    max_delta = max([np.absolute(old_param[i] - new_param[i]) for i in range(old_param.shape[0])])
+    max_delta = np.max(np.absolute(new_param - old_param))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -213,7 +215,7 @@ def expectation_maximization(points_list, k, max_iter, epsilon):
         likelihood_sum = likelihood.sum(axis=1)
         log_likelihood.append(np.sum(np.log(likelihood_sum), axis=0))
         # M step
-        ranks = likelihood  # TODO: compute ranks array using the likelihood array
+        ranks = likelihood / likelihood_sum[:,None]  # TODO: compute ranks array using the likelihood array
 
         w_new, mu_new, sigma_new = maximization(points_list, ranks)   # TODO: compute w_new, mu_new, sigma_new
 
