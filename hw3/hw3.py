@@ -105,7 +105,8 @@ def multi_normal_pdf(x, mean, cov):
  
     Returns the normal distribution pdf according to the given mean and var for the given x.    
     """
-    return np.exp( np.dot(np.dot(x-mean, np.linalg.inv(cov)),x-mean) / -2 ) / np.sqrt( (np.power(np.pi * 2, x.shape[0]) * np.square(np.linalg.det(cov))))
+    return np.exp( -0.5 * (x-mean).T @ np.linalg.inv(cov) @ (x-mean)) * (((2 * np.pi) ** (-x.shape[0] / 2)) * (np.linalg.det(cov) ** -0.5))
+    #return np.exp( np.dot(np.dot((x-mean).T, np.linalg.inv(cov)),x-mean) / -2 ) / np.sqrt( (np.power(np.pi * 2, x.shape[0]) * np.square(np.linalg.det(cov))))
 
 
 ####################################################################################################
