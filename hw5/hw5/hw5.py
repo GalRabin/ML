@@ -1,4 +1,4 @@
-from numpy import count_nonzero, logical_and, logical_or, concatenate, mean, array_split, poly1d, polyfit, array
+from numpy import count_nonzero, logical_and, logical_or, concatenate, mean, array_split, poly1d, polyfit, array, linspace
 from numpy.random import permutation
 import pandas as pd
 from sklearn.svm import SVC
@@ -166,20 +166,20 @@ def compare_svms(data_array,
     return svm_df
 
 
-def get_most_accurate_kernel():
+def get_most_accurate_kernel(acc):
     """
     :return: integer representing the row number of the most accurate kernel
     """
-    best_kernel = 5
-    return best_kernel
+    aslist = acc.tolist()
+    return aslist.index(max(aslist))
 
 
-def get_kernel_with_highest_score():
+def get_kernel_with_highest_score(scores):
     """
     :return: integer representing the row number of the kernel with the highest score
     """
-    best_kernel = 5
-    return best_kernel
+    aslist = scores.tolist()
+    return aslist.index(max(aslist))
 
 
 def plot_roc_curve_with_score(df, alpha_slope=1.5):
@@ -193,31 +193,36 @@ def plot_roc_curve_with_score(df, alpha_slope=1.5):
     ###########################################################################
     # TODO: Implement the function                                            #
     ###########################################################################
-    kernel = df.iloc[get_kernel_with_highest_score()]
+    kernel = df.iloc[get_kernel_with_highest_score(df['score'])]
     tpr = kernel['tpr']
     fpr = kernel['fpr']
     b = tpr - (1.5 * fpr)
     line_x = array([0.01 * i for i in range(100)])
     line_y = alpha_slope * line_x + b
-    plt.plot(line_x, line_y)
+    plt.plot(line_x, line_y, label='y = ax + b')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.ylim(0.95, 1.001)
+    plt.ylim(0.8, 1.1)
     plt.scatter(x, y)
+    plt.legend()
+    z = polyfit(x, y, 3)
+    p = poly1d(z)
+    xp = linspace(0, 1, 100)
+    _ = plt.plot(x, y, '.', xp, p(xp), '-')
+    
     plt.show()
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
 
 
-def evaluate_c_param(data_array, labels_array, folds_count):
+def evaluate_c_param(data_array, labels_array, folds_count, best_kernel):
     """
     :param data_array: a numpy array with the features dataset
     :param labels_array: a numpy array with the labels
     :param folds_count: number of cross-validation folds
     :return: res: a dataframe containing the results for the different c values. columns similar to `compare_svms`
     """
-
     res = pd.DataFrame()
     ###########################################################################
     # TODO: Implement the function                                            #
@@ -236,6 +241,10 @@ def evaluate_c_param(data_array, labels_array, folds_count):
     accuracy = []
     for c in c_values:
         SVM = SVC(C=c, kernel='rbf', gamma=0.5)
+        if (best_kernel['kernel'] == 'rbf'):
+            SVM = SVC(C=c, kernel='rbf', gamma=best_kernel['kernel_params']['gamma'])
+        else:
+            SVM = SVC(C=c, kernel='poly', degree=best_kernel['kernel_params']['degree'], gamma=SVM_DEFAULT_GAMMA)
         i_tpr, i_fpr, i_acc = get_k_fold_stats(data, labels, SVM)
         tpr.append(i_tpr)
         fpr.append(i_fpr)
@@ -251,13 +260,15 @@ def evaluate_c_param(data_array, labels_array, folds_count):
     return res
 
 
-def get_test_set_performance(train_data, train_labels, test_data, test_labels):
+def get_test_set_performance(train_data, train_labels, test_data, test_labels, kernel, c):
     """
     :param train_data: a numpy array with the features dataset - train
     :param train_labels: a numpy array with the labels - train
 
     :param test_data: a numpy array with the features dataset - test
     :param test_labels: a numpy array with the labels - test
+    :param kernel
+    :param c
     :return: kernel_type: the chosen kernel type (either 'poly' or 'rbf')
              kernel_params: a dictionary with the chosen kernel's parameters - c value, gamma or degree
              clf: the SVM leaner that was built from the parameters
@@ -265,7 +276,6 @@ def get_test_set_performance(train_data, train_labels, test_data, test_labels):
              fpr: fpr on the test dataset
              accuracy: accuracy of the model on the test dataset
     """
-
     kernel_type = ''
     kernel_params = None
     clf = SVC(class_weight='balanced')  # TODO: set the right kernel
@@ -276,9 +286,9 @@ def get_test_set_performance(train_data, train_labels, test_data, test_labels):
     ###########################################################################
     # TODO: Implement the function                                            #
     ###########################################################################
-    kernel_type = 'rbf'
-    kernel_params = {'gamma': 0.5}
-    clf = SVC(class_weight='balanced', C=6.666667, kernel='rbf', gamma=0.5)
+    kernel_type = kernel['kernel']
+    kernel_params = kernel['kernel_params']
+    clf = SVC(class_weight='balanced', C=c, kernel=kernel_type, degree=SVM_DEFAULT_DEGREE if kernel_type == 'rbf' else kernel_params['degree'], gamma= SVM_DEFAULT_GAMMA if kernel_type == 'poly' else kernel_params['gamma'])
     clf.fit(train_data, train_labels)
     prediction = clf.predict(test_data)
     tpr, fpr, accuracy = get_stats(prediction, test_labels)
